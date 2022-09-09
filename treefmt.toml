@@ -1,0 +1,25 @@
+# One CLI to format the code tree - https://github.com/numtide/treefmt
+[formatter.nix]
+includes = ["*.nix"]
+command = "alejandra"
+
+[formatter.shell]
+includes = ["*.sh"]
+command = "shfmt"
+options = [
+  "-i",
+  "2", # indent 2
+  "-s", # simplify the code
+  "-w", # write back to the file
+
+]
+
+[formatter.gleam]
+includes = ["*.gleam"]
+command = "gleam"
+options = ["format"]
+
+[formatter.erlang]
+includes = [ "*.erl" , "*.hrl" , "*.app" , "*.app.src" , "*.config" , "*.script" , "*.escript" ]
+excludes = ["build/", "_build/"]
+command = "erl-format"
