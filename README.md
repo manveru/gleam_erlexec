@@ -1,7 +1,7 @@
-# gleam_erlexec
+# glexec
 
-[![Package Version](https://img.shields.io/hexpm/v/gleam_erlexec)](https://hex.pm/packages/gleam_erlexec)
-[![Hex Docs](https://img.shields.io/badge/hex-docs-ffaff3)](https://hexdocs.pm/gleam_erlexec/)
+[![Package Version](https://img.shields.io/hexpm/v/glexec)](https://hex.pm/packages/glexec)
+[![Hex Docs](https://img.shields.io/badge/hex-docs-ffaff3)](https://hexdocs.pm/glexec/)
 
 A wrapper around the functions found in
 [erlexec](https://hexdocs.pm/erlexec/exec.html).
@@ -38,7 +38,7 @@ pub fn main() {
 This package can be added to your Gleam project:
 
 ```sh
-gleam add gleam_erlexec
+gleam add glexec
 ```
 
 ## Development

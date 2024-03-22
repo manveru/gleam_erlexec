@@ -1,15 +1,16 @@
-name = "gleam_erlexec"
-version = "0.0.1"
+name = "glexec"
+version = "1.0.1"
 licences = ["Apache-2.0"]
-description = "A wrapper for erlexec"
+description = "A Gleam wrapper for erlexec"
 
 repository = { type = "github", user = "manveru", repo = "gleam_erlexec" }
 links = []
 
 [dependencies]
-gleam_erlang = "~> 0.15"
+gleam_erlang = "~> 0.25"
 erlexec = "~> 2.0"
+gleam_stdlib = "~> 0.36"
 
 [dev-dependencies]
-gleeunit = "~> 0.6"
-erlfmt = "~> 1.1"
+gleeunit = "~> 1.0"
+erlfmt = "~> 1.3"

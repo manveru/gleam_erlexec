@@ -1,4 +1,4 @@
-import gleam/erlexec as exec
+import glexec as exec
 import gleam/list
 import gleam/option.{Some}
 import gleam/string
@@ -16,7 +16,7 @@ pub type Fixture {
   Timeout
 }
 
-pub fn gleam_erlexec_test_() {
+pub fn glexec_test_() {
   let tests = [
     test_monitor,
     test_sync,
@@ -43,14 +43,14 @@ fn ff(f) {
 }
 
 pub fn test_monitor() {
-  assert Ok(echo) = exec.find_executable("echo")
-  assert Ok(exec.Pids(pid, _)) =
+  let assert Ok(output) = exec.find_executable("echo")
+  let assert Ok(exec.Pids(pid, _)) =
     exec.new()
     |> exec.with_monitor(True)
     |> exec.with_stdout(exec.StdoutNull)
-    |> exec.run_async(exec.Execve([echo, "hi"]))
-  assert Ok(exec.ObtainDown(exit_pid, _)) = exec.obtain(5000)
-  assert True = exit_pid == pid
+    |> exec.run_async(exec.Execve([output, "hi"]))
+  let assert Ok(exec.ObtainDown(exit_pid, _)) = exec.obtain(5000)
+  let assert True = exit_pid == pid
 }
 
 pub fn test_sync() {
@@ -58,23 +58,22 @@ pub fn test_sync() {
   |> exec.with_stdout(exec.StdoutCapture)
   |> exec.with_stderr(exec.StderrCapture)
   |> exec.run_sync(exec.Shell("echo Test; echo ERR 1>&2"))
-  |> should.equal(Ok(exec.Output([
-    exec.Stdout(["Test\n"]),
-    exec.Stderr(["ERR\n"]),
-  ])))
+  |> should.equal(
+    Ok(exec.Output([exec.Stdout(["Test\n"]), exec.Stderr(["ERR\n"])])),
+  )
 
-  assert Ok(echo) = exec.find_executable("echo")
+  let assert Ok(result) = exec.find_executable("echo")
   exec.new()
   |> exec.with_stdout(exec.StdoutCapture)
-  |> exec.run_sync(exec.Execve([echo]))
+  |> exec.run_sync(exec.Execve([result]))
   |> should.equal(Ok(exec.Output([exec.Stdout(["\n"])])))
   True
 }
 
 pub fn test_winsz() {
-  assert Ok(bash) = exec.find_executable("bash")
+  let assert Ok(bash) = exec.find_executable("bash")
 
-  assert Ok(exec.Pids(first_pid, first_ospid)) =
+  let assert Ok(exec.Pids(first_pid, first_ospid)) =
     exec.new()
     |> exec.with_stdin(exec.StdinPipe)
     |> exec.with_stdout(exec.StdoutCapture)
@@ -82,25 +81,27 @@ pub fn test_winsz() {
     |> exec.with_monitor(True)
     |> exec.with_pty(True)
     |> exec.with_env([exec.EnvKV("TERM", "xterm")])
-    |> exec.run_async(exec.Execve([
-      bash,
-      "-i",
-      "-c",
-      "echo started; read x; echo LINES=$(tput lines) COLUMNS=$(tput cols)",
-    ]))
-  assert Ok(exec.ObtainStdout(ospid, "started\r\n")) = exec.obtain(3000)
-  assert True = ospid == first_ospid
-  assert Ok(Nil) = exec.winsz(first_ospid, 99, 88)
-  assert Ok(Nil) = exec.send(first_ospid, "\n")
-  assert Ok(exec.ObtainStdout(ospid, "LINES=99 COLUMNS=88\r\n")) =
+    |> exec.run_async(
+      exec.Execve([
+        bash,
+        "-i",
+        "-c",
+        "echo started; read x; echo LINES=$(tput lines) COLUMNS=$(tput cols)",
+      ]),
+    )
+  let assert Ok(exec.ObtainStdout(ospid, "started\r\n")) = exec.obtain(3000)
+  let assert True = ospid == first_ospid
+  let assert Ok(Nil) = exec.winsz(first_ospid, 99, 88)
+  let assert Ok(Nil) = exec.send(first_ospid, "\n")
+  let assert Ok(exec.ObtainStdout(ospid, "LINES=99 COLUMNS=88\r\n")) =
     exec.obtain(3000)
-  assert True = ospid == first_ospid
-  assert Ok(exec.ObtainDown(pid, ospid)) = exec.obtain(3000)
-  assert True = pid == first_pid
-  assert True = ospid == first_ospid
+  let assert True = ospid == first_ospid
+  let assert Ok(exec.ObtainDown(pid, ospid)) = exec.obtain(3000)
+  let assert True = pid == first_pid
+  let assert True = ospid == first_ospid
 
   // can set size on run
-  assert Ok(exec.Pids(second_pid, second_ospid)) =
+  let assert Ok(exec.Pids(second_pid, second_ospid)) =
     exec.new()
     |> exec.with_stdin(exec.StdinPipe)
     |> exec.with_stdout(exec.StdoutCapture)
@@ -109,39 +110,41 @@ pub fn test_winsz() {
     |> exec.with_pty(True)
     |> exec.with_env([exec.EnvKV("TERM", "xterm")])
     |> exec.with_winsz(99, 88)
-    |> exec.run_async(exec.Execve([
-      bash,
-      "-i",
-      "-c",
-      "echo LINES=$(tput lines) COLUMNS=$(tput cols)",
-    ]))
+    |> exec.run_async(
+      exec.Execve([
+        bash,
+        "-i",
+        "-c",
+        "echo LINES=$(tput lines) COLUMNS=$(tput cols)",
+      ]),
+    )
 
-  assert Ok(exec.ObtainStdout(gotpid4, "LINES=99 COLUMNS=88\r\n")) =
+  let assert Ok(exec.ObtainStdout(gotpid4, "LINES=99 COLUMNS=88\r\n")) =
     exec.obtain(5000)
-  assert True = gotpid4 == second_ospid
+  let assert True = gotpid4 == second_ospid
 
-  assert Ok(exec.ObtainDown(pid, ospid)) = exec.obtain(5000)
-  assert True = pid == second_pid
-  assert True = ospid == second_ospid
+  let assert Ok(exec.ObtainDown(pid, ospid)) = exec.obtain(5000)
+  let assert True = pid == second_pid
+  let assert True = ospid == second_ospid
   True
 }
 
 pub fn test_stdin() {
-  assert Ok(bash) = exec.find_executable("bash")
-  assert Ok(exec.Pids(expected_pid, expected_ospid)) =
+  let assert Ok(bash) = exec.find_executable("bash")
+  let assert Ok(exec.Pids(expected_pid, expected_ospid)) =
     exec.new()
     |> exec.with_stdin(exec.StdinPipe)
     |> exec.with_stdout(exec.StdoutCapture)
     |> exec.with_monitor(True)
     |> exec.run_async(exec.Execve([bash, "-c", "read x; echo \"Got $x\""]))
 
-  assert Ok(Nil) = exec.send(expected_ospid, "Test data\n")
+  let assert Ok(Nil) = exec.send(expected_ospid, "Test data\n")
 
-  assert Ok(exec.ObtainStdout(ospid, "Got Test data\n")) = exec.obtain(500)
+  let assert Ok(exec.ObtainStdout(ospid, "Got Test data\n")) = exec.obtain(500)
   ospid
   |> should.equal(expected_ospid)
 
-  assert Ok(exec.ObtainDown(pid, ospid)) = exec.obtain(500)
+  let assert Ok(exec.ObtainDown(pid, ospid)) = exec.obtain(500)
   pid
   |> should.equal(expected_pid)
   ospid
@@ -150,21 +153,23 @@ pub fn test_stdin() {
 }
 
 pub fn test_stdin_eof() {
-  assert Ok(tac) = exec.find_executable("tac")
-  assert Ok(exec.Pids(expected_pid, expected_ospid)) =
+  let assert Ok(tac) = exec.find_executable("tac")
+  let assert Ok(exec.Pids(expected_pid, expected_ospid)) =
     exec.new()
     |> exec.with_stdin(exec.StdinPipe)
     |> exec.with_stdout(exec.StdoutCapture)
     |> exec.with_monitor(True)
     |> exec.run_async(exec.Execve([tac]))
   ["foo\n", "bar\n", "baz\n"]
-  |> list.each(fn(line) { assert Ok(Nil) = exec.send(expected_ospid, line) })
-  assert Ok(Nil) = exec.send_eof(expected_ospid)
-  assert Ok(exec.ObtainStdout(ospid, "baz\nbar\nfoo\n")) = exec.obtain(500)
+  |> list.each(fn(line) {
+    let assert Ok(Nil) = exec.send(expected_ospid, line)
+  })
+  let assert Ok(Nil) = exec.send_eof(expected_ospid)
+  let assert Ok(exec.ObtainStdout(ospid, "baz\nbar\nfoo\n")) = exec.obtain(500)
   ospid
   |> should.equal(expected_ospid)
 
-  assert Ok(exec.ObtainDown(pid, ospid)) = exec.obtain(500)
+  let assert Ok(exec.ObtainDown(pid, ospid)) = exec.obtain(500)
   pid
   |> should.equal(expected_pid)
   ospid
@@ -192,8 +197,8 @@ fn test_std(options) {
     Some(exec.StderrCapture) -> " 1>&2"
     _ -> ""
   }
-  assert Ok(bash) = exec.find_executable("bash")
-  assert Ok(exec.Pids(_expected_pid, _expected_ospid)) =
+  let assert Ok(bash) = exec.find_executable("bash")
+  let assert Ok(exec.Pids(_expected_pid, _expected_ospid)) =
     exec.run_async(
       options,
       exec.Execve([bash, "-c", string.append(script, suffix)]),
@@ -201,12 +206,12 @@ fn test_std(options) {
 
   case exec.get_stderr(options) {
     Some(exec.StderrCapture) -> {
-      assert Ok(exec.ObtainStderr(_, "TEST1\n")) = exec.obtain(5000)
-      assert Ok(exec.ObtainStderr(_, "TEST2\n")) = exec.obtain(5000)
+      let assert Ok(exec.ObtainStderr(_, "TEST1\n")) = exec.obtain(5000)
+      let assert Ok(exec.ObtainStderr(_, "TEST2\n")) = exec.obtain(5000)
     }
     _ -> {
-      assert Ok(exec.ObtainStdout(_, "TEST1\n")) = exec.obtain(5000)
-      assert Ok(exec.ObtainStdout(_, "TEST2\n")) = exec.obtain(5000)
+      let assert Ok(exec.ObtainStdout(_, "TEST1\n")) = exec.obtain(5000)
+      let assert Ok(exec.ObtainStdout(_, "TEST2\n")) = exec.obtain(5000)
     }
   }
   True

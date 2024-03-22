@@ -1,4 +1,4 @@
--module(gleam_erlexec_ffi).
+-module(glexec_ffi).
 -export([
     stop/1,
     send/2,
