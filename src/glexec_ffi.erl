@@ -20,6 +20,7 @@ winsz(Pid, Rows, Columns) ->
 stop(Pid) ->
     case exec:stop(Pid) of
         ok -> {ok, nil};
+        {error, Error} -> {error, binary:list_to_bin(Error)};
         Error -> Error
     end.
 
@@ -68,9 +69,9 @@ obtain(Timeout) ->
         {stderr, OsPid, Data} ->
             {ok, {obtain_stderr, OsPid, Data}};
         {'DOWN', OsPid, process, Pid, normal} ->
-            {ok, {obtain_down, Pid, OsPid}};
+            {error, {obtain_down_normal, Pid, OsPid}};
         {'DOWN', OsPid, process, Pid, noproc} ->
-            {ok, {obtain_down, Pid, OsPid}};
+            {error, {obtain_down_noproc, Pid, OsPid}};
         {'DOWN', OsPid, process, Pid, {status, Status}} ->
             {error, {obtain_down_status, Pid, OsPid, Status}}
     after Timeout ->

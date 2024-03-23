@@ -58,6 +58,7 @@ pub opaque type Options {
   Options(
     cd: Option(String),
     debug: Option(Int),
+    verbose: Option(Bool),
     env: EnvOptions,
     executable: Option(String),
     group: Option(Int),
@@ -87,6 +88,7 @@ pub fn new() -> Options {
   Options(
     cd: None,
     debug: None,
+    verbose: None,
     env: [],
     executable: None,
     group: None,
@@ -251,13 +253,9 @@ type WinszOptions {
   PseudoTerminalSize(rows: Int, columns: Int)
 }
 
-@external(erlang, "exec", "debug")
-fn do_exec_debug(a: Int) -> Result(Int, Atom)
-
 /// Set the global debug level
-pub fn debug(level: Int) -> Result(Int, Atom) {
-  do_exec_debug(level)
-}
+@external(erlang, "exec", "debug")
+pub fn debug(level: Int) -> Result(Int, Atom)
 
 pub type StartError {
   AlreadyStarted(Pid)
@@ -304,18 +302,14 @@ pub type StopError {
   NoProcess
 }
 
-@external(erlang, "glexec_ffi", "stop")
-fn do_stop(a: Int) -> Result(Nil, Dynamic)
-
 /// Terminate a managed `Pid`, `OsPid`, or Port process.
 /// The OS process is terminated gracefully. If it was given a `{kill, Cmd}`
 /// option at startup, that command is executed and a timer is started. If the
 /// program doesn't exit, then the default termination is performed. Default
 /// termination implies sending a `SIGTERM` command followed by a `SIGKILL` in 5
 /// seconds, if the program doesn't get killed.
-pub fn stop(pid: Int) -> Result(Nil, Dynamic) {
-  do_stop(pid)
-}
+@external(erlang, "glexec_ffi", "stop")
+pub fn stop(pid: Int) -> Result(Nil, String)
 
 @external(erlang, "exec", "manage")
 fn do_manage(a: Dynamic, b: List(Dynamic), c: Int) -> Dynamic
@@ -365,6 +359,10 @@ fn set_monitor(old: List(Dynamic), option: Options) -> List(Dynamic) {
     True -> [from(Monitor), ..old]
     False -> old
   }
+}
+
+pub fn with_verbose(old: Options, enabled: Bool) -> Options {
+  Options(..old, verbose: Some(enabled))
 }
 
 fn set_sync(old: List(Dynamic), option: Options) -> List(Dynamic) {
@@ -981,12 +979,13 @@ pub fn int_to_signal(signal: Int) -> Signal {
 pub type ObtainOk {
   ObtainStdout(Int, String)
   ObtainStderr(Int, String)
-  ObtainDown(Pid, OsPid)
 }
 
 pub type ObtainError {
   ObtainTimeout
   ObtainDownStatus(Pid, OsPid, Int)
+  ObtainDownNormal(Pid, OsPid)
+  ObtainDownNoproc(Pid, OsPid)
 }
 
 // a wrapper around `receive`.
