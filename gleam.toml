@@ -7,9 +7,10 @@ repository = { type = "github", user = "manveru", repo = "gleam_erlexec" }
 links = []
 
 [dependencies]
-gleam_erlang = "~> 0.15"
+gleam_stdlib = "~> 0.36"
+gleam_erlang = "~> 0.25"
 erlexec = "~> 2.0"
 
 [dev-dependencies]
-gleeunit = "~> 0.6"
+gleeunit = "~> 1.0.2"
 erlfmt = "~> 1.1"

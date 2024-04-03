@@ -5,11 +5,12 @@
 //// For more detailed documentation, please refer to
 //// https://hexdocs.pm/erlexec/exec.html
 
-import gleam/dynamic.{Dynamic, from}
+import gleam/dynamic.{type Dynamic, from}
 import gleam/list
-import gleam/option.{None, Option, Some}
-import gleam/erlang/atom.{Atom}
-import gleam/erlang/process.{Pid}
+import gleam/int
+import gleam/option.{type Option, None, Some}
+import gleam/erlang/atom.{type Atom}
+import gleam/erlang/process.{type Pid}
 
 // Just a bunch of symbols used all over the place
 type ExecAtom {
@@ -251,8 +252,8 @@ type WinszOptions {
   PseudoTerminalSize(rows: Int, columns: Int)
 }
 
-external fn do_exec_debug(Int) -> Result(Int, Atom) =
-  "exec" "debug"
+@external(erlang, "exec", "debug")
+pub fn do_exec_debug(level: Int) -> Result(Int, Atom)
 
 /// Set the global debug level
 pub fn debug(level: Int) -> Result(Int, Atom) {
@@ -275,8 +276,8 @@ pub type StartOption {
   StartEnv(EnvOptions)
 }
 
-external fn do_exec_start(List(Dynamic)) -> Result(Pid, StartError) =
-  "exec" "start"
+@external(erlang, "exec", "start")
+fn do_exec_start(options: List(Dynamic)) -> Result(Pid, StartError)
 
 /// Start the `exec` application
 pub fn start(options: List(StartOption)) -> Result(Pid, StartError) {
@@ -304,8 +305,8 @@ pub type StopError {
   NoProcess
 }
 
-external fn do_stop(Int) -> Result(Nil, Dynamic) =
-  "gleam_erlexec_ffi" "stop"
+@external(erlang, "gleam_erlexec_ffi", "stop")
+fn do_stop(pid: Int) -> Result(Nil, Dynamic)
 
 /// Terminate a managed `Pid`, `OsPid`, or Port process.
 /// The OS process is terminated gracefully. If it was given a `{kill, Cmd}`
@@ -317,19 +318,19 @@ pub fn stop(pid: Int) -> Result(Nil, Dynamic) {
   do_stop(pid)
 }
 
-external fn do_manage(Dynamic, List(Dynamic), Int) -> Dynamic =
-  "exec" "manage"
+@external(erlang, "exec", "manage")
+fn do_manage(pid: Dynamic, options: List(Dynamic), timeout: Int) -> Dynamic
 
 pub fn manage_pid(pid: Pid, options: Options) {
   do_manage(from(pid), options_to_list(options), options.timeout)
 }
 
 /// Get a list of children OsPids managed by the port program.
-pub external fn which_children() -> List(OsPid) =
-  "exec" "which_children"
+@external(erlang, "exec", "which_children")
+pub fn which_children() -> List(OsPid)
 
-external fn do_kill(Dynamic, Int) -> Result(Nil, Dynamic) =
-  "gleam_erlexec_ffi" "kill"
+@external(erlang, "gleam_erlexec_ffi", "kill")
+fn do_kill(pit: Dynamic, signal: Int) -> Result(Nil, Dynamic)
 
 /// Send a signal to a child Pid.
 pub fn kill_pid(pid: Pid, signal: Int) -> Result(Nil, Dynamic) {
@@ -656,8 +657,8 @@ fn set_winsz(old: List(Dynamic), option: Options) -> List(Dynamic) {
   }
 }
 
-external fn do_winsz(Int, Int, Int) -> Result(Nil, Nil) =
-  "gleam_erlexec_ffi" "winsz"
+@external(erlang, "gleam_erlexec_ffi", "winsz")
+fn do_winsz(pid: Int, rows: Int, columns: Int) -> Result(Nil, Nil)
 
 pub fn winsz(pid, rows, columns) -> Result(Nil, Nil) {
   do_winsz(pid, rows, columns)
@@ -746,11 +747,19 @@ pub type StdoutOrStderr {
   Stderr(List(String))
 }
 
-external fn do_run_async(Dynamic, List(Dynamic), Int) -> Result(Pids, String) =
-  "gleam_erlexec_ffi" "run"
+@external(erlang, "gleam_erlexec_ffi", "run")
+fn do_run_async(
+  cmd: Dynamic,
+  options: List(Dynamic),
+  timeout: Int,
+) -> Result(Pids, String)
 
-external fn do_run_sync(Dynamic, List(Dynamic), Int) -> Result(Output, String) =
-  "gleam_erlexec_ffi" "run"
+@external(erlang, "gleam_erlexec_ffi", "run")
+fn do_run_sync(
+  cmd: Dynamic,
+  options: List(Dynamic),
+  timeout: Int,
+) -> Result(Output, String)
 
 /// Run command with the given options, don't wait for it to finish.
 pub fn run_async(options: Options, command: Command) -> Result(Pids, String) {
@@ -796,17 +805,14 @@ pub fn options_to_list(options: Options) -> List(Dynamic) {
   ]
 
   setters
-  |> list.fold(
-    [],
-    fn(acc, fun) {
-      acc
-      |> fun(options)
-    },
-  )
+  |> list.fold([], fn(acc, fun) {
+    acc
+    |> fun(options)
+  })
 }
 
-external fn do_send(OsPid, String) -> Result(Nil, Dynamic) =
-  "gleam_erlexec_ffi" "send"
+@external(erlang, "gleam_erlexec_ffi", "send")
+fn do_send(ospid: OsPid, data: String) -> Result(Nil, Dynamic)
 
 pub fn send(ospid: OsPid, data: String) -> Result(Nil, Dynamic) {
   do_send(ospid, data)
@@ -816,16 +822,16 @@ type Eof {
   Eof
 }
 
-external fn do_send_eof(OsPid, Eof) -> Result(Nil, Dynamic) =
-  "gleam_erlexec_ffi" "send"
+@external(erlang, "gleam_erlexec_ffi", "send")
+fn do_send_eof(ospid: OsPid, eof: Eof) -> Result(Nil, Dynamic)
 
 /// This will close `stdin`.
 pub fn send_eof(ospid: OsPid) -> Result(Nil, Dynamic) {
   do_send_eof(ospid, Eof)
 }
 
-external fn do_ospid(Pid) -> Result(OsPid, Dynamic) =
-  "gleam_erlexec_ffi" "ospid"
+@external(erlang, "gleam_erlexec_ffi", "ospid")
+fn do_ospid(pid: Pid) -> Result(OsPid, Dynamic)
 
 pub fn to_ospid(ospid: Pid) -> Result(OsPid, Dynamic) {
   do_ospid(ospid)
@@ -836,10 +842,8 @@ pub type FindExecutableError {
 }
 
 /// Tries to find the given executable name and returns the full path to it.
-pub external fn find_executable(
-  name: String,
-) -> Result(String, FindExecutableError) =
-  "gleam_erlexec_ffi" "find_executable"
+@external(erlang, "gleam_erlexec_ffi", "find_executable")
+pub fn find_executable(name: String) -> Result(String, FindExecutableError)
 
 pub type ExitStatusOrSignal {
   ExitStatus(Int)
@@ -851,26 +855,21 @@ pub type ExitStatusOrSignal {
   )
 }
 
-external fn and(Int, Int) -> Int =
-  "erlang" "band"
-
-external fn bsr(Int, Int) -> Int =
-  "erlang" "bsr"
-
 ///  Decode the program's exit_status.
 ///
 ///  If the program exited by signal the function returns [Signal](#Signal),
 ///  otherwise it will return an [ExitStatus](#ExitStatus)
 pub fn status(status: Int) -> ExitStatusOrSignal {
-  let term_signal = and(status, 0x7f)
-  let if_signaled = bsr(term_signal + 1, 1) > 0
+  let term_signal = int.bitwise_and(status, 0x7f)
+  let if_signaled = int.bitwise_shift_right(term_signal + 1, 1) > 0
   case if_signaled {
     True ->
       Signal(
         status: int_to_signal(term_signal),
-        core_dump: and(status, 0x80) == 0x80,
+        core_dump: int.bitwise_and(status, 0x80) == 0x80,
       )
-    False -> ExitStatus(bsr(and(status, 0xFF00), 8))
+    False ->
+      ExitStatus(int.bitwise_shift_right(int.bitwise_and(status, 0xFF00), 8))
   }
 }
 
@@ -995,7 +994,5 @@ pub type ObtainError {
 }
 
 // a wrapper around `receive`.
-pub external fn obtain(
-  timeout_in_milliseconds: Int,
-) -> Result(ObtainOk, ObtainError) =
-  "gleam_erlexec_ffi" "obtain"
+@external(erlang, "gleam_erlexec_ffi", "obtain")
+pub fn obtain(timeout_in_milliseconds: Int) -> Result(ObtainOk, ObtainError)
