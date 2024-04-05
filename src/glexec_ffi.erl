@@ -39,9 +39,18 @@ send(OsPid, Data) ->
 
 run(Exe, Options, Timeout) ->
     case exec:run(Exe, Options, Timeout) of
-        {ok, Pid, OsPid} -> {ok, {pids, Pid, OsPid}};
-        {ok, List} -> {ok, {output, List}};
-        Error -> Error
+        {ok, Pid, OsPid} ->
+            {ok, {pids, Pid, OsPid}};
+        {ok, List} ->
+            {ok, {output, List}};
+        {error, [{exit_status, ExitStatus}, {stdout, Stdout}, {stderr, Stderr}]} ->
+            {error, {run_error, ExitStatus, [{stdout, Stdout}, {stderr, Stderr}]}};
+        {error, [{exit_status, ExitStatus}, {stdout, Stdout}]} ->
+            {error, {run_error, ExitStatus, [{stdout, Stdout}]}};
+        {error, [{exit_status, ExitStatus}, {stderr, Stderr}]} ->
+            {error, {run_error, ExitStatus, [{stderr, Stderr}]}};
+        Error ->
+            Error
     end.
 
 ospid(Pid) ->

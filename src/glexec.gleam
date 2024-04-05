@@ -744,11 +744,15 @@ pub type StdoutOrStderr {
   Stderr(List(String))
 }
 
+pub type RunError {
+  RunError(exit_status: Int, output: List(StdoutOrStderr))
+}
+
 @external(erlang, "glexec_ffi", "run")
 fn do_run_async(a: Dynamic, b: List(Dynamic), c: Int) -> Result(Pids, String)
 
 @external(erlang, "glexec_ffi", "run")
-fn do_run_sync(a: Dynamic, b: List(Dynamic), c: Int) -> Result(Output, String)
+fn do_run_sync(a: Dynamic, b: List(Dynamic), c: Int) -> Result(Output, RunError)
 
 /// Run command with the given options, don't wait for it to finish.
 pub fn run_async(options: Options, command: Command) -> Result(Pids, String) {
@@ -759,8 +763,11 @@ pub fn run_async(options: Options, command: Command) -> Result(Pids, String) {
   }
 }
 
+// {error,[{exit_status,256},{stdout,[<<"foo\n">>]}]}}
+// {error,[{exit_status,256}]}}
+
 /// Run command with the given options, block the caller until it exits.
-pub fn run_sync(options: Options, command: Command) -> Result(Output, String) {
+pub fn run_sync(options: Options, command: Command) -> Result(Output, RunError) {
   let cmd_options = options_to_list(Options(..options, sync: True))
   case command {
     Execve(cmd) -> do_run_sync(from(cmd), cmd_options, options.timeout)

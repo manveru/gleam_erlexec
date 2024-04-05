@@ -1,5 +1,5 @@
 name = "glexec"
-version = "1.0.1"
+version = "1.0.3"
 licences = ["Apache-2.0"]
 description = "A Gleam wrapper for erlexec"
 

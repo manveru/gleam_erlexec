@@ -313,3 +313,19 @@ pub fn status_test() {
   should.equal(exec.status(128), exec.ExitStatus(0))
   should.equal(exec.status(129), exec.Signal(exec.SIGHUP, True))
 }
+
+pub fn run_error_test() {
+  let assert Ok(bash) = exec.find_executable("bash")
+  exec.new()
+  |> exec.with_stdin(exec.StdinPipe)
+  |> exec.with_stdout(exec.StdoutCapture)
+  |> exec.with_stderr(exec.StderrCapture)
+  |> exec.with_monitor(True)
+  |> exec.run_sync(
+    exec.Execve([bash, "--norc", "-c", "echo 1; >&2 echo 2; echo 3; exit 100"]),
+  )
+  |> should.be_error
+  |> should.equal(
+    exec.RunError(25_600, [exec.Stdout(["1\n3\n"]), exec.Stderr(["2\n"])]),
+  )
+}
